@@ -1,0 +1,18 @@
+# Test Kconfig
+menuconfig ESP8089
+	tristate "Extend for NetWork Using ESP_8266EX/8089"
+    select WIRELESS_EXT
+    select NET_RADIO
+
+config ESP_8266EX_SPI
+    tristate "Compile SPI-Mode-ESP_8266EX/8089 module in kernel"
+    depends on ESP8089
+    help
+        No help
+
+config ESP_8266EX_SDIO
+    tristate "Compile SDIO-Mode-ESP_8266EX/8089 module in kernel"
+    depends on ESP8089
+    help
+        No help
+
