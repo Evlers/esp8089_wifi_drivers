@@ -50,12 +50,12 @@ MODULE_PARM_DESC(eagle_path, "eagle path");
 
 bool mod_support_no_txampdu()
 {
-        return modparam_no_txampdu;
+	return modparam_no_txampdu;
 }
 
 bool mod_support_no_rxampdu()
 {
-        return modparam_no_rxampdu;
+	return modparam_no_rxampdu;
 }
 
 void mod_support_no_txampdu_set(bool value)
@@ -73,14 +73,15 @@ char *mod_eagle_path_get(void)
 
 int esp_pub_init_all(struct esp_pub *epub)
 {
-        int ret = 0;
+	int ret = 0;
         
-  printk("esp8089_spi: %s\n", __func__);
+	esp_dbg(ESP_DBG_TRACE, "esp8089_spi: %s\n", __func__);
 
 	/* completion for bootup event poll*/
 	DECLARE_COMPLETION_ONSTACK(complete);
 	atomic_set(&epub->ps.state, ESP_PM_OFF);
-	if(epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT){
+	if(epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT)
+	{
 		epub->sip = sip_attach(epub);
 		if (epub->sip == NULL) {
 			printk(KERN_ERR "%s sip alloc failed\n", __func__);
@@ -108,28 +109,28 @@ int esp_pub_init_all(struct esp_pub *epub)
 #endif
 
 #ifndef FPGA_DEBUG
-        ret = esp_download_fw(epub);
+	ret = esp_download_fw(epub);
 #ifdef ESP_USE_SPI
 	if(sif_get_ate_config() != 1)
         	epub->enable_int = 1;
 #endif  
 #ifdef TEST_MODE
         if(sif_get_ate_config() == 6)
-        {
-            sif_enable_irq(epub);
-            mdelay(500);
-            sif_disable_irq(epub);
-            mdelay(1000);
-            esp_test_init(epub);
-            return -1;
-        }
+	{
+		sif_enable_irq(epub);
+		mdelay(500);
+		sif_disable_irq(epub);
+		mdelay(1000);
+		esp_test_init(epub);
+		return -1;
+	}
 #endif
-        if (ret) {
-                esp_dbg(ESP_DBG_ERROR, "download firmware failed\n");
-                return ret;
-        }
+	if (ret) {
+			esp_dbg(ESP_DBG_ERROR, "download firmware failed\n");
+			return ret;
+	}
 
-        esp_dbg(ESP_DBG_TRACE, "download firmware OK \n");
+	esp_dbg(ESP_DBG_TRACE, "download firmware OK \n");
 #else
         sip_send_bootup(epub->sip);
 #endif /* FPGA_DEBUG */
@@ -158,10 +159,9 @@ int esp_pub_init_all(struct esp_pub *epub)
         return ret;
 }
 
-void
-esp_dsr(struct esp_pub *epub)
+void esp_dsr(struct esp_pub *epub)
 {
-        sip_rx(epub);
+	sip_rx(epub);
 }
 
 
@@ -187,23 +187,24 @@ static int esp_download_fw(struct esp_pub * epub)
 #ifndef HAS_FW
         const struct firmware *fw_entry;
 #endif /* !HAS_FW */
-        u8 * fw_buf = NULL;
-        u32 offset = 0;
-        int ret = 0;
-        u8 blocks;
-        struct esp_fw_hdr *fhdr;
-        struct esp_fw_blk_hdr *bhdr=NULL;
-        struct sip_cmd_bootup bootcmd;
+	u8 * fw_buf = NULL;
+	u32 offset = 0;
+	int ret = 0;
+	u8 blocks;
+	struct esp_fw_hdr *fhdr;
+	struct esp_fw_blk_hdr *bhdr=NULL;
+	struct sip_cmd_bootup bootcmd;
 
-  printk("esp8089_spi: %s\n", __func__);
+  	esp_dbg(ESP_DBG_TRACE, "esp8089_spi: %s\n", __func__);
 
 #ifndef HAS_FW
 
-        if(sif_get_ate_config() == 1) {
-		char * esp_fw_name = ESP_FW_NAME3;
-	} else {
-		char * esp_fw_name = epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT ? ESP_FW_NAME1 : ESP_FW_NAME2;
-	}
+		if(sif_get_ate_config() == 1) {
+			char * esp_fw_name = ESP_FW_NAME3;
+		} else {
+			char * esp_fw_name = epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT ? ESP_FW_NAME1 : ESP_FW_NAME2;
+		}
+	
         ret = esp_request_firmware(&fw_entry, esp_fw_name, epub->dev);
 
         if (ret)

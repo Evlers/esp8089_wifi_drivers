@@ -35,7 +35,7 @@ void sif_platform_rescan_card(unsigned insert)
 
 void sif_platform_reset_target(void)
 {
-	printk("ESP8089 reset via GPIO %d\n", esp_reset_gpio);
+	esp_dbg(ESP_DBG_LOG, "ESP8089 reset via GPIO %d\n", esp_reset_gpio);
 	gpio_request(esp_reset_gpio,"esp_reset");
 	gpio_direction_output(esp_reset_gpio,0);
 	msleep(200);

@@ -15,6 +15,7 @@
  */
 
 #ifndef _DEBUG_H_
+#define _DEBUG_H_
 
 #ifdef ASSERT_PANIC
 #define ESSERT(v) BUG_ON(!(v))
@@ -27,7 +28,7 @@
 #include <linux/debugfs.h>
 #include <asm/uaccess.h>
 
-typedef enum esp_type {
+typedef enum {
         ESP_BOOL,
         ESP_U8,
         ESP_U16,
@@ -47,7 +48,7 @@ int esp_debugfs_init(void);
 
 void esp_debugfs_exit(void);
 
-enum {
+typedef enum {
         ESP_DBG_ERROR = BIT(0),
         ESP_DBG_TRACE = BIT(1),
         ESP_DBG_LOG = BIT(2),
@@ -58,7 +59,7 @@ enum {
 	ESP_DBG_PS = BIT(7),
 	ESP_ATE = BIT(8),
         ESP_DBG_ALL = 0xffffffff
-};
+} esp_dbg_type;
 
 extern unsigned int esp_msg_level;
 

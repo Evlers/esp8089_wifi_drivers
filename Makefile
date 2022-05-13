@@ -1,10 +1,9 @@
-obj-$(CONFIG_ESP8089)        +=  esp8089_spi.o
-esp8089_spi-y                 +=  esp_debug.o sdio_sif_esp.o spi_sif_esp.o esp_io.o \
+obj-$(CONFIG_ESP8089)           +=  esp8089_spi.o
+esp8089_spi-y                   +=  esp_debug.o sdio_sif_esp.o spi_sif_esp.o esp_io.o \
                                     esp_file.o esp_main.o esp_sip.o esp_ext.o esp_ctrl.o \
                                     esp_mac80211.o esp_debug.o esp_utils.o esp_pm.o testmode.o \
                                     ESP8089_dts.o 
 
-# 遗留代码
 ccflags-y += -DDEBUG -DSIP_DEBUG -DDEBUG_FS
 ccflags-y += -DRX_SENDUP_SYNC -DTESETS
 ccflags-y += -DFAST_TX_STATUS 

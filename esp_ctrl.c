@@ -278,11 +278,15 @@ int sip_parse_events(struct esp_sip *sip, u8 *buf)
                 esp_dbg(ESP_SHOW, "%s\n", test_res_str);
 		if(*len && sip->epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT){
         		char filename[256];
-			if (mod_eagle_path_get() == NULL)
-        			sprintf(filename, "%s/%s", FWPATH, "test_results");
-			else
-        			sprintf(filename, "%s/%s", mod_eagle_path_get(), "test_results");
-			esp_readwrite_file(filename, NULL, test_res_str, strlen(test_res_str));
+			// if (mod_eagle_path_get() == NULL)
+        		// 	sprintf(filename, "%s/%s", FWPATH, "test_results");
+			// else
+        		// 	sprintf(filename, "%s/%s", mod_eagle_path_get(), "test_results");
+                        if (mod_eagle_path_get() != NULL)
+                        {
+                                sprintf(filename, "%s/%s", mod_eagle_path_get(), "test_results");
+			        esp_readwrite_file(filename, NULL, test_res_str, strlen(test_res_str));
+                        }
 		}
                 break;
         }
