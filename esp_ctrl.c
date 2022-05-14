@@ -273,9 +273,8 @@ int sip_parse_events(struct esp_sip *sip, u8 *buf)
                 u8 *p = (buf + sizeof(struct sip_hdr) + sizeof(u16));
                 u16 *len = (u16 *)(buf + sizeof(struct sip_hdr));
 		char test_res_str[560];
-		sprintf(test_res_str, "esp_host:%llx\nesp_target: %.*s", DRIVER_VER, *len, p);
+		sprintf(test_res_str, "esp_host_version: %llx\nesp_target_version: %.*s", DRIVER_VER, *len, p);
 		
-                esp_dbg(ESP_SHOW, "%s\n", test_res_str);
 		if(*len && sip->epub->sdio_state == ESP_SDIO_STATE_FIRST_INIT){
         		char filename[256];
 			// if (mod_eagle_path_get() == NULL)
@@ -287,6 +286,7 @@ int sip_parse_events(struct esp_sip *sip, u8 *buf)
                                 sprintf(filename, "%s/%s", mod_eagle_path_get(), "test_results");
 			        esp_readwrite_file(filename, NULL, test_res_str, strlen(test_res_str));
                         }
+                        esp_dbg(ESP_SHOW, "%s", test_res_str);
 		}
                 break;
         }

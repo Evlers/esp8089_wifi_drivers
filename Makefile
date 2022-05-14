@@ -14,7 +14,7 @@ ccflags-y += -DP2P_CONCURRENT
 ccflags-y += -DHAS_FW
 ccflags-y += -DESP_ACK_INTERRUPT
 ccflags-y += -DESP_USE_SPI
-ccflags-y += -DREGISTER_SPI_BOARD_INFO
+# ccflags-y += -DREGISTER_SPI_BOARD_INFO
 ifdef ANDROID
 ccflags-y += -DANDROID
 endif

@@ -15,7 +15,7 @@
 #include <linux/spi/spi.h>
 #include <linux/interrupt.h>
 #include <linux/kthread.h>
-
+#include <linux/delay.h>
 
 #include "esp_pub.h"
 #include "esp_sif.h"
@@ -26,6 +26,7 @@
 #include "esp_file.h"
 #include "esp_debug.h"
 #include "ESP8089_dts.h"
+#include "esp_spi_config.h"
 
 #ifdef USE_EXT_GPIO
 #include "esp_ext.h"
@@ -106,7 +107,7 @@ struct task_struct *sif_irq_thread;
 
 #define ESP_DMA_IBUFSZ   2048
 
-unsigned int esp_msg_level = ESP_DBG_ERROR | ESP_SHOW;
+unsigned int esp_msg_level = ESP_DBG_ERROR;
 
 static struct semaphore esp_powerup_sem;
 
@@ -910,7 +911,7 @@ int sif_spi_read_bytes(struct spi_device *spi, unsigned int addr,unsigned char *
         /*
            char t = pos;
            while ( t < pos+32) {
-           printk(KERN_ERR "rx:[0x%02x] ", rx_cmd[t]);
+           printk(KERN_ERR "esp8089_spi: rx:[0x%02x] ", rx_cmd[t]);
            t++;
            if ((t-pos)%8 == 0)
            printk(KERN_ERR "\n");
@@ -1587,11 +1588,11 @@ int sif_spi_protocol_init(struct spi_device *spi)
                 sif_spi_write_raw_proto(spi, tx_buf1, 6);
                 mdelay(100);
                 sif_spi_write_async_read_proto(spi, dummy_tx_buf, rx_buf1, 10);
-                esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+                esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1],rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
-                mdelay(100);
-                        if(++fail_count > 10)
-                            return -ETIMEDOUT;
+                mdelay(200);
+                if(++fail_count > 10)
+                    return -ETIMEDOUT;
             } while( rx_buf1[2] != 0x01 );
         }
         else if( spi_proto_ini_status == 1 )
@@ -1606,7 +1607,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1],rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if( spi_proto_ini_status == 2 )
@@ -1621,7 +1622,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if( spi_proto_ini_status == 3 ) 
@@ -1636,7 +1637,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "CMD52 Write  addr 02 \n");  
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if( spi_proto_ini_status == 4 ) 
@@ -1651,7 +1652,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if( spi_proto_ini_status == 5 )
@@ -1666,7 +1667,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_LOG, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_LOG, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if( spi_proto_ini_status == 6 )
@@ -1681,7 +1682,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if (spi_proto_ini_status>6 && spi_proto_ini_status<15)
@@ -1695,7 +1696,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if (spi_proto_ini_status==15)
@@ -1710,7 +1711,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
                 
             // esp_dbg(ESP_DBG_LOG, "CMD52 Write Reg addr 0x111 \n");  
@@ -1723,7 +1724,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
             rx_buf1[0],rx_buf1[1],rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
 
             // esp_dbg(ESP_DBG_LOG, "CMD52 Write Reg addr 0x111 \n");   /* set boot mode */
@@ -1736,7 +1737,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             // esp_dbg(ESP_DBG_LOG, "esp8089_spi: %s, %d\n", __FILE__, __LINE__);
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_SHOW, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n",
+            esp_dbg(ESP_SHOW, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n",
             rx_buf1[0],rx_buf1[1],rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
         }
         else if (spi_proto_ini_status==16)
@@ -1751,7 +1752,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
 
             //sif_spi_read_bytes( 0x0c,rx_buf1, 4);
@@ -1765,7 +1766,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
             
             esp_dbg(ESP_DBG_LOG, "CMD52 Write  Reg addr 0x3d \n"); 
@@ -1777,7 +1778,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
             
             esp_dbg(ESP_DBG_LOG, "CMD52 Write  Reg addr 0x3e \n"); 
@@ -1789,7 +1790,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
             
             esp_dbg(ESP_DBG_LOG, "CMD52 Write  Reg addr 0x3f \n"); 
@@ -1801,7 +1802,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
             
             esp_dbg(ESP_DBG_LOG, "CMD52 Write  Reg addr 0x40 \n"); 
@@ -1813,7 +1814,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
 
             tx_buf1[0]=0x74;
@@ -1824,7 +1825,7 @@ int sif_spi_protocol_init(struct spi_device *spi)
             tx_buf1[5]=0x01;
             sif_spi_write_raw(spi, tx_buf1, 6);
             sif_spi_write_async_read(spi,dummy_tx_buf, rx_buf1,10);
-            esp_dbg(ESP_DBG_ERROR, "rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: rx:[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x],[0x%02x]\n", 
                 rx_buf1[0],rx_buf1[1] ,rx_buf1[2],rx_buf1[3],rx_buf1[4],rx_buf1[5],rx_buf1[6],rx_buf1[7],rx_buf1[8],rx_buf1[9]);
 #endif                    
         }
@@ -2071,10 +2072,15 @@ static int esp_spi_probe(struct spi_device *spi)
     int err;
     struct esp_pub *epub;
     struct esp_spi_ctrl *sctrl;
-    
-    esp8089_get_dt_data(spi);
+    static bool get_dev_tree = true;
 
     esp_dbg(ESP_SHOW, "esp8089_spi: %s enter\n", __func__);
+
+    if(get_dev_tree)//检查是否第一次探测
+    {
+        esp8089_get_dt_data(spi);
+        get_dev_tree = false;
+    }
 
 /* -------------------------------------------------------------------------- */\
     // esp_dbg(ESP_SHOW,  "esp8089_spi: %s Set CS LOW\n", __func__);
@@ -2090,10 +2096,10 @@ static int esp_spi_probe(struct spi_device *spi)
 		else
 			goto _err_second_init;
 	}
-	//esp_dbg(ESP_DBG_ERROR, "esp8089_spi: %s init_protocol\n", __func__);
 
 /* -------------------------------------------------------------------------- */
 
+    //esp_dbg(ESP_DBG_ERROR, "esp8089_spi: %s init_protocol\n", __func__);
 	err = sif_spi_protocol_init(spi);
 
 	if(err)
@@ -2187,7 +2193,7 @@ static int esp_spi_probe(struct spi_device *spi)
     {
 		esp_dbg(ESP_SHOW, "esp8089_spi: first normal exit\n");
 		sif_sdio_state = ESP_SDIO_STATE_FIRST_NORMAL_EXIT;
-		up(&esp_powerup_sem);
+		up(&esp_powerup_sem);//给出信号量进入第二次probe
 	}
 
     esp_dbg(ESP_SHOW, "esp8089_spi: %s EXIT\n", __func__);
@@ -2327,7 +2333,7 @@ static int esp_spi_remove(struct spi_device *spi)
         
 	spi_set_drvdata(spi,NULL);
 	
-    esp_dbg(ESP_SHOW, "esp8089_spi: spi remove complete\n");
+    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: spi remove complete\n");
 
 	return 0;
 }
@@ -2358,165 +2364,93 @@ static const struct dev_pm_ops esp_spi_pm_ops = {
     .resume= esp_spi_resume,
 };
 
-extern struct spi_device_id esp_spi_id[];
+struct spi_device_id esp_spi_id[] = { 
+	{"espressif,esp8089", 0},
+	{},
+};
+MODULE_DEVICE_TABLE(spi, esp_spi_id);
+
+static const struct of_device_id esp8089_of_match[] = {
+    { .compatible = "espressif,esp8089" },
+    { /* Sentinel */ }
+};
 
 struct spi_driver esp_spi_driver = {
     .id_table = esp_spi_id,
 	.driver	= {
-        .name	= "espressif,esp8089,spi",
+        .name	= "esp8089-spi",
 		.bus    = &spi_bus_type,
 		.owner	= THIS_MODULE,
+        .of_match_table = esp8089_of_match,
 		.pm = &esp_spi_pm_ops,
 	},
 	.probe	= esp_spi_probe,
 	.remove	= esp_spi_remove,
 };
 
-static int esp_spi_dummy_probe(struct spi_device *spi)
-{
-    esp_dbg(ESP_SHOW, "esp8089_spi: %s enter\n", __func__);
-
-    esp8089_get_dt_data(spi);
-
-    up(&esp_powerup_sem);
-    
-    return 0;
-}
-
-static int esp_spi_dummy_remove(struct spi_device *spi) 
-{
-    return 0;
-}
-
-struct spi_driver esp_spi_dummy_driver = {
-	.id_table = esp_spi_id,
-	.driver	= {
-		.name	= "espressif,esp8089,dummy",
-		.bus    = &spi_bus_type,
-		.owner	= THIS_MODULE,
-	},
-	.probe	= esp_spi_dummy_probe,
-	.remove	= esp_spi_dummy_remove,
-};
-
-#include <linux/delay.h>
-
 static int __init esp_spi_init(void)
 {
-    #define ESP_WAIT_UP_TIME_MS 11000
-    int err;
-    u64 ver;
-    int retry = 3;
-    bool powerup = false;
-    int edf_ret = 0;
-
     long long sem_timeout = 0;
-
+    #ifdef DRIVER_VER
+    u64 ver;
+    #endif
+    
     #ifdef REGISTER_SPI_BOARD_INFO
     static struct spi_device* spi;
     sif_platform_register_board_info();
     #endif
 
     esp_dbg(ESP_SHOW, "esp8089_spi: %s \n", __func__);
+    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: In the initialization");
 
     #ifdef DRIVER_VER
     ver = DRIVER_VER;
-    esp_dbg(ESP_SHOW, "esp8089_spi: EAGLE DRIVER VER %llx\n", ver);
+    esp_dbg(ESP_SHOW, "esp8089_spi: EAGLE DRIVER VER %llx", ver);
     #endif
 
-    edf_ret = esp_debugfs_init();
+    esp_debugfs_init();
 
     request_init_conf();
 
     esp_wakelock_init();
     esp_wake_lock();
-
-    do {
-        sema_init(&esp_powerup_sem, 0);
-        sif_platform_target_poweron();
-        err = spi_register_driver(&esp_spi_dummy_driver);
-
-        if (err) {
-            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: eagle spi driver registration failed, error code: %d\n", err);
-            goto _fail;
-        }
-
-        #ifdef REGISTER_SPI_BOARD_INFO
-            spi = sif_platform_new_device();
-            if (spi) {
-                esp_dbg(ESP_SHOW, "esp8089_spi: register board OK\n");
-                //err = esp_spi_dummy_probe(spi);
-            }
-            else
-                esp_dbg(ESP_DBG_ERROR, "esp8089_spi: No slave to probe\n");
-            
-            if (err) {
-                esp_dbg(ESP_DBG_ERROR, "esp8089_spi: dummy probe failure");
-                goto _fail;
-            }
-        #endif
-
-        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: Wait for the first signal.");
-        sem_timeout = down_timeout(&esp_powerup_sem, msecs_to_jiffies(ESP_WAIT_UP_TIME_MS));
-        if (sem_timeout == 0) 
-        {
-            powerup = true;
-            msleep(200);
-            break;
-        }
-        else
-            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: sem_timeout = %lld\n", sem_timeout);
-
-        esp_dbg(ESP_SHOW, "esp8089_spi: %s ------ RETRY ------ \n", __func__);
-        sif_record_retry_config();
-        spi_unregister_driver(&esp_spi_dummy_driver);
-        sif_platform_target_poweroff();
-                
-    } while (--retry);
-
-    if (!powerup)
-    {
-        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: eagle spi can not power up!\n");
-        err = -ENODEV;
-        goto _fail;
-    }
-
-    esp_dbg(ESP_SHOW, "esp8089_spi: ESP8089 power up OK\n");
-
-    spi_unregister_driver(&esp_spi_dummy_driver);
-
-    sif_sdio_state = ESP_SDIO_STATE_FIRST_INIT;
-    sema_init(&esp_powerup_sem, 0);
-
-    spi_register_driver(&esp_spi_driver);
+    sif_platform_target_poweron();
+    // msleep(100);//等待上电完成
+    esp_dbg(ESP_SHOW, "esp8089_spi: ESP8089 power up OK");
 
     #ifdef REGISTER_SPI_BOARD_INFO
-    if (spi)
-    {
-        //err = esp_spi_probe(spi);
-    }
-    else
-        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: No slave to probe\n");
-    
-    if (err) {
-        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: probe failure");
-        goto _fail;
-    }
+        spi = sif_platform_new_device();
+        if (spi) {
+            esp_dbg(ESP_SHOW, "esp8089_spi: register board OK");
+        }
+        else
+        {
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: No slave to probe");
+            goto _fail;
+        }
     #endif
 
-    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: Wait for the second signal.");
-    sem_timeout = down_timeout(&esp_powerup_sem, msecs_to_jiffies(ESP_WAIT_UP_TIME_MS));
-    esp_dbg(ESP_SHOW, "esp8089_spi: sem_timeout = %lld\n", sem_timeout);
+    sema_init(&esp_powerup_sem, 0);//初始化信号量 用于等待probe完成
+    sif_sdio_state = ESP_SDIO_STATE_FIRST_INIT;//第一次初始化(第一次probe)
+    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: Wait for the first initialization to complete...");
+    spi_register_driver(&esp_spi_driver);//注册SPI驱动 执行probe
+
+    sem_timeout = down_timeout(&esp_powerup_sem, msecs_to_jiffies(11 * 1000));//等待probe给出信号量 (11s)
     if (sem_timeout == 0 && sif_get_ate_config() == 0)
     {
         if(sif_sdio_state == ESP_SDIO_STATE_FIRST_NORMAL_EXIT)
         {
-            spi_unregister_driver(&esp_spi_driver);
+            esp_dbg(ESP_DBG_ERROR, "esp8089_spi: Wait for the second initialization to complete...");
+            spi_unregister_driver(&esp_spi_driver);//卸载SPI设备
             msleep(100);
             sif_sdio_state = ESP_SDIO_STATE_SECOND_INIT;
-            spi_register_driver(&esp_spi_driver);
+            spi_register_driver(&esp_spi_driver);//重新注册SPI设备执行probe完成第二次初始化
         }
+
+        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: Configuration successful.");
     }
+    else
+        esp_dbg(ESP_SHOW, "esp8089_spi: sem_timeout = %lld\n", sem_timeout);
 
     esp_register_early_suspend();
     esp_wake_unlock();
@@ -2524,15 +2458,15 @@ static int __init esp_spi_init(void)
     request_rtc_irq();
     #endif
 
-    // esp_dbg(ESP_SHOW, "esp8089_spi: %s err %d\n", __func__, err);
-    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: init success.\n");
-    return err;
-
-  _fail:
-    esp_wake_unlock();
-    esp_wakelock_destroy();
-    esp_dbg(ESP_SHOW, "esp8089_spi: %s err %d\n", __func__, err);
-    return err;
+    return 0;
+    
+    #ifdef REGISTER_SPI_BOARD_INFO
+    _fail:
+        esp_wake_unlock();
+        esp_wakelock_destroy();
+        esp_dbg(ESP_SHOW, "esp8089_spi: %s error exit", __func__);
+        return -1;
+    #endif
 }
 
 static void __exit esp_spi_exit(void) 

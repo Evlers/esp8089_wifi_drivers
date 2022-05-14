@@ -1,76 +1,103 @@
-# ESP8089-SPI
+# Linux ESP8089 Drivers
 
-Linux kernel module to use ESP8089 / ESP8266 over SPI. Intended for use with 
-Raspberry Pi Zero.
+使用在Linux内核编译的ESP8266/ESP8089驱动模块
 
-## Hardware
+## 硬件
 
-If using an ESP8089, no changes are required to be made to the chip. If using 
-an ESP8266, the SPI flash must first be desoldered. This is the 8-pin SOIC 
-component near the 32-pin QFN die. The ESP-201 variation works well for this. 
-Alternatively, one can use an off-brand NodeMCU or WeMos D1 Mini, albeit a 
-version that doesn't use the ESP-12. 
+如果使用ESP8089，则不需要对芯片进行任何更改。如果使用在ESP8266，则SPI Flash必须先摘除。
+注意：目前未将CS脚持续拉低，会造成模块进入休眠无法通讯或通讯延迟较高，请将CS脚接GND保持唤醒或者使用普通IO进行控制。
 
+#### F1C200S(SPI1)与模块的引脚定义:
 
-#### What pins go where:
-
-| Raspberry Pi | ESP8266 / ESP8089      | Function         |
+| F1C200S      | ESP8266 / ESP8089      | Function         |
 | ------------ | ---------------------- | ---------------- |
-| BCM 13       | CHIP_EN                | esp\_reset\_gpio |
-| BCM 16       | GPIO10 / SDIO\_DATA\_3 | esp\_cs0\_pin    |
-| BCM 19       | GPIO7 / SDIO\_DATA\_0  | MISO             |
-| BCM 20       | GPIO11 / SDIO\_CMD     | MOSI             |
-| BCM 21       | GPIO6 / SDIO\_CLK      | SCLK             |
-| BCM 26       | GPIO8 / SDIO\_DATA\_1  | esp\_interrupt   |
+| PE4          | CHIP_EN                | esp\_reset\_gpio |
+| PE7          | GPIO10 / SDIO\_DATA\_3 | esp\_cs\_pin     |
+| PE10         | GPIO7 / SDIO\_DATA\_0  | MISO             |
+| PE8          | GPIO11 / SDIO\_CMD     | MOSI             |
+| PE9          | GPIO6 / SDIO\_CLK      | SCLK             |
+| PE5          | GPIO8 / SDIO\_DATA\_1  | esp\_interrupt   |
 | 3.3V         | GPIO15 / MTDO          | boot select      |
 | 3.3V         | GPIO0                  | boot select      |
 | GND          | GPIO2                  | boot select      |
 
-It may be advisable to add a resistor across each I/O pin (33 ~ 330 Ohm).
+建议在每个I/O引脚上添加电阻 (33 ~ 330 Ohm).
 
-## Software
+## 设备树配置
 
-Start with a fresh install of Raspbian.
+Start with a fresh install of MangoPi-Tiny-R3.
 
-#### Step one: prerequisites
+#### 第一步: 添加SPI1引脚定义
 
-`sudo apt-get -y update`
+suniv-f1c100s.dtsi:
+```
+spi1_pins: spi1-pins {
+                pins = "PE7", "PE8", "PE9", "PE10";
+                function = "spi1";
+                bias-pull-up;
+            };
+```
 
-`sudo apt-get -y upgrade`
+```
+spi1: spi@1c06000 {
+            compatible = "allwinner,suniv-f1c100s-spi",
+                     "allwinner,sun8i-h3-spi";
+            reg = <0x01c06000 0x1000>;
+            interrupts = <11>;
+            clocks = <&ccu CLK_BUS_SPI1>, <&ccu CLK_BUS_SPI1>;
+            clock-names = "ahb", "mod";
+            resets = <&ccu RST_BUS_SPI1>;
+            status = "disabled";
+            pinctrl-names = "default";
+            pinctrl-0 = <&spi1_pins>;
+            #address-cells = <1>;
+            #size-cells = <0>;
+        };
+```
 
-`sudo apt-get -y dist-upgrade`
 
-`sudo apt-get -y install raspberrypi-kernel-headers gcc git make`
+#### 第二步: 配置设备驱动节点
 
-#### Step two: install
+devicetree.dts:
+```
+&spi1 {
+	status = "okay";
+	
+	wifi@0 {
+		compatible = "espressif,esp8089";
+		spi-cpol;
+		spi-cpha;
+		reg = <0>;
+		spi-max-frequency = <30000000>;
 
-`mkdir ~/esp`
+		reset= <132>;//PE4 128 + 4 = 132
+		interrupt= <133>;//PE5 128 + 5 = 133
+		debug= <0>;
+		
+		status = "okay";
+	};
+};
+```
 
-`cd ~/esp`
+#### 第三步：下拉代码到内核
 
-`git clone https://github.com/notabucketofspam/ESP8089-SPI.git`
+- 把该仓库下拉到内核源码/driver/staging/下
+- 修改内核源码/driver/staging/下的Kconfig文件，添加：
+`source "drivers/staging/esp8089/Kconfig"`
+- 修改内核源码/driver/staging/下的Makefile
+`obj-$(CONFIG_ESP8089)           += esp8089/`
+- 接着返回内核源码所在目录，输入：
+`make menuconfig   #（buildroot请输入 make linux-menuconfig）`
+- 然后选中ESP8089，里面选中SPI编译即可:
+```
+[Device Drivers]
+        ->[Staging drivers]
+                ->[<M>   Extend for NetWork Using ESP_8266EX/8089] 
+                       ->[<M>   Compile SPI-Mode-ESP_8266EX/8089 module in kernel]
+```
 
-`cd ESP8089-SPI`
-
-`sudo make install`
-
-#### Step three: configure
-
-`sudo su`
-
-`echo "options esp8089-spi esp_reset_gpio=13 esp_cs0_pin=16 esp_interrupt=26" > /etc/modprobe.d/esp.conf`
-
-`echo "esp8089_spi" >> /etc/modprobe.d/blacklist`
-
-`echo "spi_bcm2835" >> /etc/modules`
-
-`echo "spi_bcm2835aux" >> /etc/modules`
-
-`echo "esp8089_spi" >> /etc/modules`
-
-`echo "dtoverlay=spi1-1cs,cs0_pin=16,cs0_spidev=disabled" >> /boot/config.txt`
-
-`reboot`
+#### 第四步：重新编译内核
+`./rebuild-kernel.sh`
 
 ## How it works
 
@@ -89,6 +116,8 @@ pin \(held low\) and subsequently set to load code over SPI via GPIO15
 low to select the correct boot mode.
 
 ## References
+
+[https://github.com/notabucketofspam/ESP8089-SPI](https://github.com/notabucketofspam/ESP8089-SPI)
 
 [https://pinout.xyz/pinout/spi](https://pinout.xyz/pinout/spi)
 
