@@ -5,6 +5,7 @@
 ## 硬件
 
 如果使用ESP8089，则不需要对芯片进行任何更改。如果使用在ESP8266，则SPI Flash必须先摘除。
+
 注意：目前未将CS脚持续拉低，会造成模块进入休眠无法通讯或通讯延迟较高，请将CS脚接GND保持唤醒或者使用普通IO进行控制。
 
 #### F1C200S(SPI1)与模块的引脚定义:
@@ -56,7 +57,7 @@ spi1: spi@1c06000 {
 ```
 
 
-#### 第二步: 配置设备驱动节点
+#### 第二步: 配置设备驱动节点(id列表匹配方式)
 
 devicetree.dts:
 ```
@@ -64,7 +65,7 @@ devicetree.dts:
 	status = "okay";
 	
 	wifi@0 {
-		compatible = "espressif,esp8089";
+		compatible = "esp8089";
 		spi-cpol;
 		spi-cpha;
 		reg = <0>;

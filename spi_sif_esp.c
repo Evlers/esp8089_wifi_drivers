@@ -2365,20 +2365,21 @@ static const struct dev_pm_ops esp_spi_pm_ops = {
 };
 
 struct spi_device_id esp_spi_id[] = { 
-	{"espressif,esp8089", 0},
+	{"esp8089", 0},
 	{},
 };
 MODULE_DEVICE_TABLE(spi, esp_spi_id);
 
 static const struct of_device_id esp8089_of_match[] = {
-    { .compatible = "espressif,esp8089" },
+    { .compatible = "esp8089" },
     { /* Sentinel */ }
 };
+MODULE_DEVICE_TABLE(of, esp8089_of_match);
 
 struct spi_driver esp_spi_driver = {
     .id_table = esp_spi_id,
 	.driver	= {
-        .name	= "esp8089-spi",
+        .name	= "esp8089",
 		.bus    = &spi_bus_type,
 		.owner	= THIS_MODULE,
         .of_match_table = esp8089_of_match,
