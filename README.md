@@ -24,11 +24,28 @@
 
 建议在每个I/O引脚上添加电阻 (33 ~ 330 Ohm).
 
-## 设备树配置
+## 开始移植使用
 
 Start with a fresh install of MangoPi-Tiny-R3.
 
-#### 第一步: 添加SPI1引脚定义
+#### 第一步：下拉代码到内核
+
+- 把该仓库下拉到内核源码/driver/staging/下
+- 修改内核源码/driver/staging/下的Kconfig文件，添加：
+`source "drivers/staging/esp8089/Kconfig"`
+- 修改内核源码/driver/staging/下的Makefile
+`obj-$(CONFIG_ESP8089)           += esp8089/`
+- 接着返回内核源码所在目录，输入：
+`make menuconfig   #（buildroot请输入 make linux-menuconfig）`
+- 然后选中ESP8089，里面选中SPI编译即可:
+```
+[Device Drivers]
+        ->[Staging drivers]
+                ->[<M>   Extend for NetWork Using ESP_8266EX/8089] 
+                       ->[<M>   Compile SPI-Mode-ESP_8266EX/8089 module in kernel]
+```
+
+#### 第二步: 添加SPI1引脚定义
 
 suniv-f1c100s.dtsi:
 ```
@@ -57,7 +74,7 @@ spi1: spi@1c06000 {
 ```
 
 
-#### 第二步: 配置设备驱动节点(id列表匹配方式)
+#### 第三步: 配置设备驱动节点(ID列表匹配方式)
 
 devicetree.dts:
 ```
@@ -80,25 +97,10 @@ devicetree.dts:
 };
 ```
 
-#### 第三步：下拉代码到内核
-
-- 把该仓库下拉到内核源码/driver/staging/下
-- 修改内核源码/driver/staging/下的Kconfig文件，添加：
-`source "drivers/staging/esp8089/Kconfig"`
-- 修改内核源码/driver/staging/下的Makefile
-`obj-$(CONFIG_ESP8089)           += esp8089/`
-- 接着返回内核源码所在目录，输入：
-`make menuconfig   #（buildroot请输入 make linux-menuconfig）`
-- 然后选中ESP8089，里面选中SPI编译即可:
-```
-[Device Drivers]
-        ->[Staging drivers]
-                ->[<M>   Extend for NetWork Using ESP_8266EX/8089] 
-                       ->[<M>   Compile SPI-Mode-ESP_8266EX/8089 module in kernel]
-```
 
 #### 第四步：重新编译内核
 `./rebuild-kernel.sh`
+
 
 ## How it works
 
