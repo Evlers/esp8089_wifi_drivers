@@ -2083,10 +2083,7 @@ static int esp_spi_probe(struct spi_device *spi)
     }
 
 /* -------------------------------------------------------------------------- */\
-    // esp_dbg(ESP_SHOW,  "esp8089_spi: %s Set CS LOW\n", __func__);
-    // gpio_request(esp_cs_pin, "esp_cs_pin");
-    // gpio_direction_output(esp_cs_pin,0);//保持CS为低电平，拉高模块会进入休眠导致无法复位成功或者延迟过高
-    // gpio_free(esp_cs_pin);
+    sif_platform_cs_enable();//保持CS为低电平，拉高模块会进入休眠导致无法复位成功或者延迟过高
 	err = esp_setup_spi(spi); //分配一些内存，设置参数
 
 	if (err) {

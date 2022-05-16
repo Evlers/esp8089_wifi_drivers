@@ -265,7 +265,8 @@ void sif_unlock_bus(struct esp_pub *epub);
 void sif_platform_target_poweroff(void);
 void sif_platform_target_poweron(void);
 void sif_platform_target_speed(int high_speed);
-
+void sif_platform_cs_enable(void);
+void sif_platform_cs_disable(void);
 void sif_platform_reset_target(void);
 void sif_platform_rescan_card(unsigned insert);
 

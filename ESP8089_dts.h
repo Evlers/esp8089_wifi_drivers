@@ -8,6 +8,7 @@
 struct esp8089_info
 {
     unsigned int debug;
+    int cs_gpio;
     int reset_gpio;
     int interrupt_gpio;
 };

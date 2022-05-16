@@ -47,10 +47,12 @@ Start with a fresh install of MangoPi-Tiny-R3.
 
 #### 第二步: 添加SPI1引脚定义
 
+注意：这里不将CS交给SPI控制器
+
 suniv-f1c100s.dtsi:
 ```
 spi1_pins: spi1-pins {
-                pins = "PE7", "PE8", "PE9", "PE10";
+                pins = "PE8", "PE9", "PE10";
                 function = "spi1";
                 bias-pull-up;
             };
@@ -88,6 +90,7 @@ devicetree.dts:
 		reg = <0>;
 		spi-max-frequency = <30000000>;
 
+		cs = <135>;//PE7 128 + 7 = 135
 		reset= <132>;//PE4 128 + 4 = 132
 		interrupt= <133>;//PE5 128 + 5 = 133
 		debug= <0>;

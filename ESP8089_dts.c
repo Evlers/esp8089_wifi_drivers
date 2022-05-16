@@ -23,12 +23,13 @@
 #include "esp_debug.h"
 
 struct esp8089_info esp8089_dts_info;
+void esp8089_set_cs_gpio(int numss);
 void esp8089_set_interrupt_gpio(int numss);
 void esp8089_set_reset_gpio(int numss);
 
 int esp8089_probe_dt(struct device *dev)
 {
-    int ret;
+    int ret = 0;
     struct device_node *node = dev->of_node;
 
     if (!node)
@@ -37,11 +38,12 @@ int esp8089_probe_dt(struct device *dev)
 		return -EINVAL;
 	}
 
-    ret = of_property_read_u32(node, "reset", &esp8089_dts_info.reset_gpio);//获取reset的GPIO
-    ret = of_property_read_u32(node, "interrupt", &esp8089_dts_info.interrupt_gpio); //获取interrupt的GPIO
+    ret |= of_property_read_u32(node, "cs", &esp8089_dts_info.cs_gpio); //获取chip select的GPIO
+    ret |= of_property_read_u32(node, "reset", &esp8089_dts_info.reset_gpio);//获取reset的GPIO
+    ret |= of_property_read_u32(node, "interrupt", &esp8089_dts_info.interrupt_gpio); //获取interrupt的GPIO
     if(ret != 0)
     {
-        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: read reset interrupt gpio error");
+        esp_dbg(ESP_DBG_ERROR, "esp8089_spi: read cs reset interrupt gpio error !!!");
         return ret;
     }
 
@@ -54,10 +56,14 @@ int esp8089_probe_dt(struct device *dev)
 
     esp_dbg(ESP_DBG_ERROR, "esp8089_spi: succeed get all info from device tree.");
     esp_msg_level = esp8089_dts_info.debug | ESP_DBG_ERROR;//强制打开错误日志
+    esp8089_set_cs_gpio(esp8089_dts_info.cs_gpio);
     esp8089_set_reset_gpio (esp8089_dts_info.reset_gpio);
     esp8089_set_interrupt_gpio (esp8089_dts_info.interrupt_gpio);
     esp_dbg(ESP_DBG_ERROR, "esp8089_spi: succeed Cover esp_interrupt and esp_reset_gpio.");
-    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: interrupt_gpio: %d, reset_gpio : %d", esp8089_dts_info.interrupt_gpio, esp8089_dts_info.reset_gpio);
+    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: cs_gpio: %d interrupt_gpio: %d, reset_gpio : %d", 
+                            esp8089_dts_info.cs_gpio,
+                            esp8089_dts_info.interrupt_gpio,
+                            esp8089_dts_info.reset_gpio);
     return ret;
 }
 

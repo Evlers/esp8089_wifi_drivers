@@ -10,6 +10,32 @@
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 
+/* 
+HSPI:
+  GPIO12  HMISO
+  GPIO13  HMOSI
+  GPIO14  HSCLK
+  GPIO15  HCS
+
+SPI:
+  GPIO6   SCLK
+  GPIO7   MISO
+  GPIO8   MOSI
+  GPIO11  CS
+
+SDIO:
+  GPIO6   SDCLK
+  GPIO7   SDD0
+  GPIO8   SDD1
+  GPIO9   SDD2
+  GPIO10  SDD3
+  GPIO11  SDCMD
+*/
+
+static int esp_cs_gpio = 135;//PE7 128 + 7 = 135
+static int esp_interrupt = 133;//PE5 128 + 5 = 133
+static int esp_reset_gpio = 132;//PE4 128 + 4 = 132
+
 /* *** *** Board info *** *** */
 #ifdef REGISTER_SPI_BOARD_INFO
 
@@ -63,40 +89,19 @@ struct spi_device* sif_platform_new_device(void)
 }
 #endif
 
-/* 
-HSPI:
-  GPIO12  HMISO
-  GPIO13  HMOSI
-  GPIO14  HSCLK
-  GPIO15  HCS
-
-SPI:
-  GPIO6   SCLK
-  GPIO7   MISO
-  GPIO8   MOSI
-  GPIO11  CS
-
-SDIO:
-  GPIO6   SDCLK
-  GPIO7   SDD0
-  GPIO8   SDD1
-  GPIO9   SDD2
-  GPIO10  SDD3
-  GPIO11  SDCMD
-*/
-
-// static int esp_cs_pin = 135;//PE7 128 + 7 = 135
-static int esp_interrupt = 133;//PE5 128 + 5 = 133
-static int esp_reset_gpio = 132;//PE4 128 + 4 = 132
-
-void esp8089_set_interrupt_gpio(int numss) 
+void esp8089_set_interrupt_gpio(int numss)
 {
-	esp_interrupt=numss;
+	esp_interrupt = numss;
 }
 
-void esp8089_set_reset_gpio(int numss) 
+void esp8089_set_reset_gpio(int numss)
 {
-    esp_reset_gpio=numss;
+    esp_reset_gpio = numss;
+}
+
+void esp8089_set_cs_gpio(int numss)
+{
+    esp_cs_gpio = numss;
 }
 
 int sif_platform_irq_init(void)
@@ -161,6 +166,20 @@ void sif_platform_ack_interrupt(struct esp_pub *epub)
 #endif
 
 /* *** *** Platform power *** *** */
+
+void sif_platform_cs_enable(void)
+{
+	gpio_request(esp_cs_gpio, "esp_cs_gpio");
+	gpio_direction_output(esp_cs_gpio, 0);
+	gpio_free(esp_cs_gpio);
+}
+
+void sif_platform_cs_disable(void)
+{
+	gpio_request(esp_cs_gpio, "esp_cs_gpio");
+	gpio_direction_output(esp_cs_gpio, 1);
+	gpio_free(esp_cs_gpio);
+}
 
 void sif_platform_reset_target(void)
 {

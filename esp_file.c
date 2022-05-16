@@ -371,7 +371,7 @@ int request_init_conf(void)
 					sif_record_wakeup_gpio_config(esp_init_table[i].value);
 				}
 
-                if(strcmp(esp_init_table[i].attr, "ate_test") == 0){
+                                if(strcmp(esp_init_table[i].attr, "ate_test") == 0){
 					sif_record_ate_config(esp_init_table[i].value);
 				}
 
