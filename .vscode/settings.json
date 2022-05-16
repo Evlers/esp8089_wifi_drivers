@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "esp_debug.h": "c",
-        "esp_sif.h": "c"
-    }
-}
