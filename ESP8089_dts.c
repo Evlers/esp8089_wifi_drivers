@@ -59,7 +59,6 @@ int esp8089_probe_dt(struct device *dev)
     esp8089_set_cs_gpio(esp8089_dts_info.cs_gpio);
     esp8089_set_reset_gpio (esp8089_dts_info.reset_gpio);
     esp8089_set_interrupt_gpio (esp8089_dts_info.interrupt_gpio);
-    esp_dbg(ESP_DBG_ERROR, "esp8089_spi: succeed Cover esp_interrupt and esp_reset_gpio.");
     esp_dbg(ESP_DBG_ERROR, "esp8089_spi: cs_gpio: %d interrupt_gpio: %d, reset_gpio : %d", 
                             esp8089_dts_info.cs_gpio,
                             esp8089_dts_info.interrupt_gpio,
